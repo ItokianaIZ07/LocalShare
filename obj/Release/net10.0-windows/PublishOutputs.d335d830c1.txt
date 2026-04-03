@@ -1,0 +1,5 @@
+D:\projet\Compress Program\LocalShare\bin\Release\net10.0-windows\publish\LocalShare.exe
+D:\projet\Compress Program\LocalShare\bin\Release\net10.0-windows\publish\LocalShare.dll
+D:\projet\Compress Program\LocalShare\bin\Release\net10.0-windows\publish\LocalShare.deps.json
+D:\projet\Compress Program\LocalShare\bin\Release\net10.0-windows\publish\LocalShare.runtimeconfig.json
+D:\projet\Compress Program\LocalShare\bin\Release\net10.0-windows\publish\LocalShare.pdb
