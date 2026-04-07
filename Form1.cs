@@ -8,6 +8,7 @@ namespace LocalShare
 {
     public partial class Form1 : Form
     {
+        public ConnectionManager connectionManager = new ConnectionManager(5000, new FileManager());
         private System.Windows.Forms.Timer slideTimer = new System.Windows.Forms.Timer();
         private Control currentView = new SendView();
         private Control targetView;
