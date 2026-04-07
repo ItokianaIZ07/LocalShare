@@ -8,7 +8,7 @@ namespace LocalShare
     public partial class Form1 : Form
     {
         private System.Windows.Forms.Timer slideTimer = new System.Windows.Forms.Timer();
-        private Control currentView;
+        private Control currentView = new SendView();
         private Control targetView;
 
         public Form1()
@@ -77,13 +77,15 @@ namespace LocalShare
 
         private void DropZone_DragDrop(object sender, DragEventArgs e)
         {
-            dropZone.BackColor = Color.FromArgb(35, 35, 40);
+            sendView.DropZone.BackColor = Color.FromArgb(35, 35, 40);
 
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
             foreach (var file in files)
             {
-                Log("📂 Fichier reçu : " + Path.GetFileName(file));
+                string logo = Directory.Exists(file) ? "📂 Dossier " : "📜 Fichier ";
+                string size = Directory.Exists(file) ? "" : ""; 
+                Log(logo+" : " + Path.GetFileName(file) + " "+size);
             }
 
             statusLabel.Text = files.Length + " fichier(s) ajouté(s)";
@@ -91,7 +93,8 @@ namespace LocalShare
 
         private void Log(string message)
         {
-            logBox.AppendText(message + Environment.NewLine);
+            sendView.LogBox.AppendText(message + Environment.NewLine);
+            FileWriter.Write("history.log", message, false);
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -111,9 +114,11 @@ namespace LocalShare
         {
             if (currentView == newView) return;
 
+
             targetView = newView;
             targetView.Left = panelMain.Width;
             targetView.Visible = true;
+
 
             slideTimer.Start();
         }
@@ -179,12 +184,12 @@ namespace LocalShare
                 if (Network.IsConnected())
                 {
                     connexionState.ForeColor = Color.Green;
-                    connexionState.Text = "Connected";
+                    connexionState.Text = "Connected ✅";
                 }
                 else
                 {
                     connexionState.ForeColor = Color.Orange;
-                    connexionState.Text = "Not Connected";
+                    connexionState.Text = "Not Connected ✖️";
                 }
             });
         }

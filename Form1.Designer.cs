@@ -26,9 +26,13 @@
             sendButton = new Button();
             receiveButton = new Button();
             panelMain = new Panel();
-            panel3 = new Panel();
-            vScrollBar1 = new VScrollBar();
             panelMode = new Panel();
+            deviceList = new Panel();
+            deviceLabel = new Label();
+            searchLayout = new FlowLayoutPanel();
+            searchBox = new TextBox();
+            searchButton = new Button();
+            searchLabel = new Label();
             panel2 = new Panel();
             validPseudo = new CheckBox();
             pseudoBox = new TextBox();
@@ -52,8 +56,9 @@
             panelSidebar.SuspendLayout();
             footer1.SuspendLayout();
             panelMain.SuspendLayout();
-            panel3.SuspendLayout();
             panelMode.SuspendLayout();
+            deviceList.SuspendLayout();
+            searchLayout.SuspendLayout();
             panel2.SuspendLayout();
             mainLayout.SuspendLayout();
             dropZone.SuspendLayout();
@@ -130,7 +135,7 @@
             connexionState.AutoSize = true;
             connexionState.Font = new Font("SimSun", 9F, FontStyle.Italic, GraphicsUnit.Point, 0);
             connexionState.ForeColor = Color.FromArgb(255, 128, 0);
-            connexionState.Location = new Point(135, 13);
+            connexionState.Location = new Point(127, 9);
             connexionState.Name = "connexionState";
             connexionState.Size = new Size(125, 18);
             connexionState.TabIndex = 5;
@@ -149,6 +154,7 @@
             // 
             // sendButton
             // 
+            sendButton.Cursor = Cursors.Hand;
             sendButton.Location = new Point(30, 100);
             sendButton.Name = "sendButton";
             sendButton.Size = new Size(160, 50);
@@ -158,6 +164,7 @@
             // 
             // receiveButton
             // 
+            receiveButton.Cursor = Cursors.Hand;
             receiveButton.Location = new Point(30, 180);
             receiveButton.Name = "receiveButton";
             receiveButton.Size = new Size(160, 50);
@@ -168,7 +175,6 @@
             // panelMain
             // 
             panelMain.BackColor = Color.FromArgb(24, 24, 28);
-            panelMain.Controls.Add(panel3);
             panelMain.Controls.Add(panelMode);
             panelMain.Controls.Add(sendView);
             panelMain.Controls.Add(receiveView);
@@ -178,38 +184,89 @@
             panelMain.Size = new Size(701, 562);
             panelMain.TabIndex = 0;
             // 
-            // panel3
-            // 
-            panel3.BorderStyle = BorderStyle.FixedSingle;
-            panel3.Controls.Add(vScrollBar1);
-            panel3.Dock = DockStyle.Bottom;
-            panel3.Location = new Point(0, 336);
-            panel3.Name = "panel3";
-            panel3.Size = new Size(501, 226);
-            panel3.TabIndex = 2;
-            // 
-            // vScrollBar1
-            // 
-            vScrollBar1.Dock = DockStyle.Right;
-            vScrollBar1.Location = new Point(460, 0);
-            vScrollBar1.Name = "vScrollBar1";
-            vScrollBar1.Size = new Size(39, 224);
-            vScrollBar1.TabIndex = 0;
-            // 
             // panelMode
             // 
             panelMode.BackColor = Color.FromArgb(28, 28, 32);
+            panelMode.Controls.Add(deviceList);
             panelMode.Controls.Add(panel2);
             panelMode.Controls.Add(panel1);
             panelMode.Controls.Add(radioGroup);
             panelMode.Controls.Add(radioSolo);
             panelMode.Controls.Add(modeTitle);
             panelMode.Dock = DockStyle.Right;
-            panelMode.Location = new Point(501, 0);
+            panelMode.Location = new Point(411, 0);
             panelMode.Name = "panelMode";
             panelMode.Padding = new Padding(10);
-            panelMode.Size = new Size(200, 562);
+            panelMode.Size = new Size(290, 562);
             panelMode.TabIndex = 0;
+            // 
+            // deviceList
+            // 
+            deviceList.BorderStyle = BorderStyle.FixedSingle;
+            deviceList.Controls.Add(deviceLabel);
+            deviceList.Controls.Add(searchLayout);
+            deviceList.Controls.Add(searchLabel);
+            deviceList.Dock = DockStyle.Right;
+            deviceList.Location = new Point(10, 81);
+            deviceList.Margin = new Padding(8);
+            deviceList.Name = "deviceList";
+            deviceList.Size = new Size(270, 410);
+            deviceList.TabIndex = 2;
+            // 
+            // deviceLabel
+            // 
+            deviceLabel.AutoSize = true;
+            deviceLabel.Dock = DockStyle.Top;
+            deviceLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            deviceLabel.ForeColor = SystemColors.Control;
+            deviceLabel.Location = new Point(0, 148);
+            deviceLabel.Name = "deviceLabel";
+            deviceLabel.Size = new Size(136, 32);
+            deviceLabel.TabIndex = 4;
+            deviceLabel.Text = "Device List";
+            // 
+            // searchLayout
+            // 
+            searchLayout.Controls.Add(searchBox);
+            searchLayout.Controls.Add(searchButton);
+            searchLayout.Dock = DockStyle.Top;
+            searchLayout.Location = new Point(0, 22);
+            searchLayout.Name = "searchLayout";
+            searchLayout.Size = new Size(268, 126);
+            searchLayout.TabIndex = 3;
+            // 
+            // searchBox
+            // 
+            searchBox.Location = new Point(3, 3);
+            searchBox.Name = "searchBox";
+            searchBox.PlaceholderText = "IP address";
+            searchBox.Size = new Size(224, 31);
+            searchBox.TabIndex = 1;
+            searchBox.TextAlign = HorizontalAlignment.Center;
+            // 
+            // searchButton
+            // 
+            searchButton.Cursor = Cursors.Hand;
+            searchButton.FlatStyle = FlatStyle.System;
+            searchButton.ForeColor = Color.FromArgb(0, 122, 255);
+            searchButton.Location = new Point(233, 3);
+            searchButton.Name = "searchButton";
+            searchButton.Size = new Size(32, 34);
+            searchButton.TabIndex = 2;
+            searchButton.Text = "🔍";
+            searchButton.UseVisualStyleBackColor = true;
+            // 
+            // searchLabel
+            // 
+            searchLabel.AutoSize = true;
+            searchLabel.Dock = DockStyle.Top;
+            searchLabel.Font = new Font("Verdana", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            searchLabel.ForeColor = SystemColors.ButtonHighlight;
+            searchLabel.Location = new Point(0, 0);
+            searchLabel.Name = "searchLabel";
+            searchLabel.Size = new Size(199, 22);
+            searchLabel.TabIndex = 0;
+            searchLabel.Text = "Search for Ip Addr";
             // 
             // panel2
             // 
@@ -218,7 +275,7 @@
             panel2.Dock = DockStyle.Bottom;
             panel2.Location = new Point(10, 491);
             panel2.Name = "panel2";
-            panel2.Size = new Size(180, 61);
+            panel2.Size = new Size(270, 61);
             panel2.TabIndex = 4;
             // 
             // validPseudo
@@ -244,7 +301,7 @@
             pseudoBox.Multiline = true;
             pseudoBox.Name = "pseudoBox";
             pseudoBox.PlaceholderText = "Pseudo";
-            pseudoBox.Size = new Size(180, 31);
+            pseudoBox.Size = new Size(270, 31);
             pseudoBox.TabIndex = 0;
             pseudoBox.TextAlign = HorizontalAlignment.Center;
             pseudoBox.TextChanged += pseudoBox_TextChanged;
@@ -262,7 +319,7 @@
             radioGroup.ForeColor = Color.White;
             radioGroup.Location = new Point(10, 57);
             radioGroup.Name = "radioGroup";
-            radioGroup.Size = new Size(180, 24);
+            radioGroup.Size = new Size(270, 24);
             radioGroup.TabIndex = 0;
             radioGroup.Text = "👥 Groupe";
             // 
@@ -273,7 +330,7 @@
             radioSolo.ForeColor = Color.White;
             radioSolo.Location = new Point(10, 33);
             radioSolo.Name = "radioSolo";
-            radioSolo.Size = new Size(180, 24);
+            radioSolo.Size = new Size(270, 24);
             radioSolo.TabIndex = 1;
             radioSolo.TabStop = true;
             radioSolo.Text = "🔹 Solo (P2P)";
@@ -285,19 +342,22 @@
             modeTitle.ForeColor = Color.White;
             modeTitle.Location = new Point(10, 10);
             modeTitle.Name = "modeTitle";
-            modeTitle.Size = new Size(180, 23);
+            modeTitle.Size = new Size(270, 23);
             modeTitle.TabIndex = 2;
             modeTitle.Text = "Mode de partage";
             // 
             // sendView
             // 
+            sendView.AllowDrop = true;
             sendView.BackColor = Color.FromArgb(24, 24, 28);
             sendView.Dock = DockStyle.Fill;
             sendView.Location = new Point(0, 0);
-            sendView.MinimumSize = new Size(700, 350);
+            sendView.MinimumSize = new Size(450, 350);
             sendView.Name = "sendView";
             sendView.Size = new Size(701, 562);
             sendView.TabIndex = 0;
+            sendView.DragDrop += DropZone_DragDrop;
+            sendView.DragEnter += DropZone_DragEnter;
             // 
             // receiveView
             // 
@@ -338,6 +398,7 @@
             dropZone.Padding = new Padding(10);
             dropZone.Size = new Size(427, 194);
             dropZone.TabIndex = 0;
+            dropZone.DragDrop += DropZone_DragDrop;
             // 
             // dropLabel
             // 
@@ -367,7 +428,6 @@
             // 
             // logBox
             // 
-            logBox.Dock = DockStyle.Fill;
             logBox.Location = new Point(20, 30);
             logBox.Margin = new Padding(20);
             logBox.Name = "logBox";
@@ -386,6 +446,7 @@
             // 
             // statusLabel
             // 
+            statusLabel.ForeColor = Color.White;
             statusLabel.Name = "statusLabel";
             statusLabel.Size = new Size(43, 25);
             statusLabel.Text = "Prêt";
@@ -411,8 +472,11 @@
             footer1.ResumeLayout(false);
             footer1.PerformLayout();
             panelMain.ResumeLayout(false);
-            panel3.ResumeLayout(false);
             panelMode.ResumeLayout(false);
+            deviceList.ResumeLayout(false);
+            deviceList.PerformLayout();
+            searchLayout.ResumeLayout(false);
+            searchLayout.PerformLayout();
             panel2.ResumeLayout(false);
             panel2.PerformLayout();
             mainLayout.ResumeLayout(false);
@@ -454,7 +518,11 @@
         private ReceiveView receiveView;
         private Panel footer1;
         private Panel panel2;
-        private Panel panel3;
-        private VScrollBar vScrollBar1;
+        private Panel deviceList;
+        private FlowLayoutPanel searchLayout;
+        private TextBox searchBox;
+        private Button searchButton;
+        private Label searchLabel;
+        private Label deviceLabel;
     }
 }
