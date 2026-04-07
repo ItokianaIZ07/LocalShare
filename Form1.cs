@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using LocalShare.Core;
 
 namespace LocalShare
 {
@@ -86,6 +87,7 @@ namespace LocalShare
                 string logo = Directory.Exists(file) ? "📂 Dossier " : "📜 Fichier ";
                 string size = Directory.Exists(file) ? "" : ""; 
                 Log(logo+" : " + Path.GetFileName(file) + " "+size);
+                Logger.Log(logo+" : " + Path.GetFileName(file) + " "+size);
             }
 
             statusLabel.Text = files.Length + " fichier(s) ajouté(s)";
@@ -208,6 +210,7 @@ namespace LocalShare
             if (!isSyntaxValid(pseudoBox.Text))
             {
                 MessageBox.Show("Le pseudo ne doit pas contenir de caractère spéciaux sauf pour '_'");
+                Logger.Error("Le pseudo ne doit pas contenir de caractère spéciaux sauf pour '_'");
                 pseudoBox.Text = pseudoBox.Text.Substring(0, pseudoBox.TextLength - 1);
                 return;
             }
@@ -218,6 +221,10 @@ namespace LocalShare
             else
             {
                 MessageBox.Show("" +
+                    "Le pseudo ne doit pas dépasser 10 caractères\n" +
+                    "Veillez entrer un autre pseudo"
+                    );
+                Logger.Error("" +
                     "Le pseudo ne doit pas dépasser 10 caractères\n" +
                     "Veillez entrer un autre pseudo"
                     );
