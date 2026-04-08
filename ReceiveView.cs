@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
+using LocalShare.Core;
 
 namespace LocalShare
 {
@@ -21,5 +22,6 @@ namespace LocalShare
 
             this.Controls.Add(infoLabel);
         }
+
     }
 }
