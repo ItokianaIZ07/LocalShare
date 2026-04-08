@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using LocalShare.Core;
+using System.Collections.Generic;
 
 namespace LocalShare
 {
@@ -12,6 +13,10 @@ namespace LocalShare
         private System.Windows.Forms.Timer slideTimer = new System.Windows.Forms.Timer();
         private Control currentView = new SendView();
         private Control targetView;
+
+        private LanDiscovery discovery;
+
+        private Dictionary<string, NetworkUser> users = new();
 
         public Form1()
         {
@@ -86,9 +91,8 @@ namespace LocalShare
             foreach (var file in files)
             {
                 string logo = Directory.Exists(file) ? "📂 Dossier " : "📜 Fichier ";
-                string size = Directory.Exists(file) ? "" : ""; 
-                Log(logo+" : " + Path.GetFileName(file) + " "+size);
-                Logger.Log(logo+" : " + Path.GetFileName(file) + " "+size);
+                Log(logo + " : " + Path.GetFileName(file));
+                Logger.Log(logo + " : " + Path.GetFileName(file));
             }
 
             statusLabel.Text = files.Length + " fichier(s) ajouté(s)";
@@ -110,18 +114,56 @@ namespace LocalShare
 
             currentView = sendView;
             ShowViewInstant(sendView);
+
+            discovery = new LanDiscovery(pseudoBox.Text);
+
+            discovery.OnUserDiscovered += (user) =>
+            {
+                if (user.Pseudo == pseudoBox.Text) return;
+                if (users.ContainsKey(user.IP)) return;
+
+                users[user.IP] = user;
+
+                SafeUI(() =>
+                {
+                    AddUserToUI(user);         
+                    DisplayNeighbours();       
+                });
+            };
+
+            discovery.Start();
+            DisplayNeighbours(); 
         }
 
-        // 🔥 Animation Slide
+        private void AddUserToUI(NetworkUser user)
+        {
+            Panel item = new Panel
+            {
+                Height = 50,
+                Dock = DockStyle.Top,
+                BackColor = Color.FromArgb(40, 40, 45)
+            };
+
+            Label name = new Label
+            {
+                Text = $"{user.Pseudo} ({user.IP})",
+                ForeColor = Color.White,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            item.Controls.Add(name);
+            deviceList.Controls.Add(item);
+            deviceList.Controls.SetChildIndex(item, 0);
+        }
+
         private void AnimateSlide(Control newView)
         {
             if (currentView == newView) return;
 
-
             targetView = newView;
             targetView.Left = panelMain.Width;
             targetView.Visible = true;
-
 
             slideTimer.Start();
         }
@@ -210,27 +252,19 @@ namespace LocalShare
         {
             if (!isSyntaxValid(pseudoBox.Text))
             {
-                MessageBox.Show("Le pseudo ne doit pas contenir de caractère spéciaux sauf pour '_'");
-                Logger.Error("Le pseudo ne doit pas contenir de caractère spéciaux sauf pour '_'");
+                MessageBox.Show("Caractères invalides");
                 pseudoBox.Text = pseudoBox.Text.Substring(0, pseudoBox.TextLength - 1);
                 return;
             }
+
             if (isOptimalLength(pseudoBox.Text))
             {
                 FileWriter.Write("config.conf", "pseudo*:/" + pseudoBox.Text, true);
             }
             else
             {
-                MessageBox.Show("" +
-                    "Le pseudo ne doit pas dépasser 10 caractères\n" +
-                    "Veillez entrer un autre pseudo"
-                    );
-                Logger.Error("" +
-                    "Le pseudo ne doit pas dépasser 10 caractères\n" +
-                    "Veillez entrer un autre pseudo"
-                    );
+                MessageBox.Show("Pseudo trop long (max 20)");
                 pseudoBox.Text = "";
-                FileWriter.Write("config.conf", "pseudo*:/ ", true);
             }
         }
 
@@ -255,5 +289,65 @@ namespace LocalShare
         {
             changePseudoBoxState();
         }
+
+        private void UserBtn_Click(object sender, EventArgs e)
+        {
+            Button clickedBtn = sender as Button;
+            if (clickedBtn != null)
+            {
+                string pseudo = clickedBtn.Text;
+                string ip = clickedBtn.Tag.ToString();
+
+                MessageBox.Show($"Vous avez cliqué sur {pseudo} ({ip})");
+            }
+        }
+
+        private void DisplayNeighbours()
+        {
+            if (panelNeighbours == null)
+            {
+                panelNeighbours = new Panel
+                {
+                    Dock = DockStyle.Bottom,
+                    Height = 200,
+                    AutoScroll = true,
+                    BackColor = Color.FromArgb(40, 40, 45)
+                };
+                panelMode.Controls.Add(panelNeighbours); // ajoute dans panelMode
+            }
+
+            panelNeighbours.Controls.Clear();
+
+            foreach (var kvp in users)
+            {
+                string ip = kvp.Key;
+                string pseudo = kvp.Value.Pseudo;
+
+                Button userBtn = new Button
+                {
+                    Text = pseudo,
+                    Tag = ip,
+                    Width = panelNeighbours.Width - 20,
+                    Height = 40,
+                    Top = panelNeighbours.Controls.Count * 45,
+                    Left = 10,
+                    BackColor = Color.FromArgb(45, 45, 50),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat
+                };
+
+                userBtn.Click += UserBtn_Click;
+
+                panelNeighbours.Controls.Add(userBtn);
+            }
+        }
+
+        private Panel panelNeighbours; 
+    }
+
+    public class NetworkUser
+    {
+        public string Pseudo { get; set; }
+        public string IP { get; set; }
     }
 }

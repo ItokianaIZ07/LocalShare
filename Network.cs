@@ -11,15 +11,13 @@ namespace LocalShare
 
         static Network()
         {
-            // Abonne-toi à l'événement de changement réseau
             NetworkChange.NetworkAddressChanged += new NetworkAddressChangedEventHandler(OnNetworkChange);
-            // Initialise l'adresse IP au lancement
             UpdateIp();
         }
 
         private static void OnNetworkChange(object sender, EventArgs e)
         {
-            UpdateIp(); 
+            UpdateIp();
             Console.WriteLine($"[Network Update] Nouvelle IP: {CurrentIp}");
             IpChanged?.Invoke(CurrentIp);
         }
@@ -58,6 +56,9 @@ namespace LocalShare
             return false;
         }
 
-
+        public static string[] getNeighboursList()
+        {
+            return LanDiscovery.GetNeighbours();
+        }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Net.Sockets;
 using System.Net;
+using System.Text;
 
 namespace LocalShare.Core
 {
@@ -23,97 +24,41 @@ namespace LocalShare.Core
 
         public void StartServer()
         {
-            try
-            {
-                server = new TcpListener(IPAddress.Any, Port);
-                server.Start();
-                Logger.Log($"Server started on port {Port}");
-                Logger.Log("Waiting for clients...");
+            server = new TcpListener(IPAddress.Any, Port);
+            server.Start();
 
-                Thread acceptThread = new Thread(AcceptClients);
-                acceptThread.IsBackground = true;
-                acceptThread.Start();
-            }
-            catch (Exception ex)
-            {
-                Logger.Error($"Failed to start server: {ex.Message}");
-            }
-        }
+            Logger.Log($"Server started on port {Port}");
 
-        public void StopServer()
-        {
-            try
-            {
-                foreach (var client in clients.Keys)
-                {
-                    DisconnectClient(client);
-                }
-                server.Stop();
-                Logger.Log("Server stopped");
-            }
-            catch (Exception ex)
-            {
-                Logger.Error($"Failed to stop server: {ex.Message}");
-            }
-        }
-
-        private string getPseudo(TcpClient client)
-        {
-            NetworkStream stream = client.GetStream();
-            string clientKey = ((IPEndPoint)client.Client.RemoteEndPoint).ToString();
-            byte[] buffer = new byte[4096];
-            string message = null;
-            while (true)
-            {
-                int bytesRead = stream.Read(buffer, 0, buffer.Length);
-
-                byte[] data = new byte[bytesRead];
-                Array.Copy(buffer, 0, data, 0, bytesRead);
-
-                message = System.Text.Encoding.UTF8.GetString(data);
-                if (message.StartsWith("PSEUDO|"))
-                {
-                    message = message.Split("|")[1];
-                    break;
-                }
-            }
-            return message.Trim() != "" ? message : "Unknown";
+            new Thread(AcceptClients) { IsBackground = true }.Start();
         }
 
         private void AcceptClients()
         {
             while (true)
             {
-                try
-                {
-                    TcpClient client = server.AcceptTcpClient();
-                    string clientKey = ((IPEndPoint)client.Client.RemoteEndPoint).ToString();
-                    clients.TryAdd(clientKey, client);
-                    lock (pseudos)
-                    {
-                        pseudos[clientKey] = getPseudo(client);
-                    }
-                    Logger.Log($"Client connected: {clientKey} - Pseudo : {pseudos[clientKey]}");
+                TcpClient client = server.AcceptTcpClient();
+                string clientKey = ((IPEndPoint)client.Client.RemoteEndPoint).ToString();
 
-                    new Thread(() => HandleClient(client)) { IsBackground = true }.Start();
-                }
-                catch (Exception ex)
+                clients.TryAdd(clientKey, client);
+
+                lock (pseudos)
                 {
-                    Logger.Error($"Error accepting client: {ex.Message}");
+                    pseudos[clientKey] = "Unknown";
                 }
+
+                Logger.Log($"Client connected: {clientKey}");
+
+                new Thread(() => HandleClient(client)) { IsBackground = true }.Start();
             }
         }
 
         private void HandleClient(TcpClient client)
         {
             string clientKey = ((IPEndPoint)client.Client.RemoteEndPoint).ToString();
-            NetworkStream stream = null;
+            NetworkStream stream = client.GetStream();
 
             try
             {
-                stream = client.GetStream();
-                Logger.Log($"Handling client {clientKey}");
-
                 byte[] buffer = new byte[4096];
 
                 while (true)
@@ -121,123 +66,94 @@ namespace LocalShare.Core
                     int bytesRead = stream.Read(buffer, 0, buffer.Length);
 
                     if (bytesRead == 0)
-                    {
-                        Logger.Log($"Client {clientKey} disconnected.");
                         break;
-                    }
 
-                    byte[] data = new byte[bytesRead];
-                    Array.Copy(buffer, 0, data, 0, bytesRead);
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-                    string message = System.Text.Encoding.UTF8.GetString(data);
-
+                    // 🔹 PSEUDO
                     if (message.StartsWith("PSEUDO|"))
                     {
                         string pseudo = message.Split('|')[1].Trim();
+
                         lock (pseudos)
                         {
-                            pseudos[clientKey] = pseudo != "" ? pseudo : "Unknown";
+                            pseudos[clientKey] = string.IsNullOrEmpty(pseudo) ? "Unknown" : pseudo;
                         }
-                        Logger.Log($"Client {clientKey} set pseudo: {pseudos[clientKey]}");
+
+                        Logger.Log($"{clientKey} → pseudo: {pseudos[clientKey]}");
                     }
+
+                    // 🔹 GET NEIGHBOURS
+                    else if (message.StartsWith("GET_NEIGHBOURS"))
+                    {
+                        string response;
+
+                        lock (pseudos)
+                        {
+                            response = string.Join(",", pseudos.Values);
+                        }
+
+                        byte[] data = Encoding.UTF8.GetBytes(response);
+                        stream.Write(data, 0, data.Length);
+                    }
+
+                    // 🔹 MESSAGE
                     else if (message.StartsWith("MSG|"))
                     {
-                        string text = message.Substring(4); // retirer MSG|
-                        Logger.Log($"Message from {pseudos.GetValueOrDefault(clientKey, clientKey)}: {text}");
+                        string text = message.Substring(4);
+
+                        Logger.Log($"Message from {GetPseudo(clientKey)}: {text}");
                     }
+
+                    // 🔹 FILE
                     else if (message.StartsWith("FILE|"))
                     {
-                        // Format attendu: FILE|nomFichier|taille
                         string[] parts = message.Split('|');
-                        if (parts.Length >= 3)
-                        {
-                            string fileName = parts[1];
-                            long fileSize = long.Parse(parts[2]);
 
-                            Logger.Log($"Receiving file '{fileName}' ({fileSize} bytes) from {pseudos.GetValueOrDefault(clientKey, clientKey)}");
+                        string fileName = parts[1];
+                        long fileSize = long.Parse(parts[2]);
 
-                            FileManager.StartReceiving(fileName, fileSize, stream);
-
-                            Logger.Log($"File '{fileName}' received from {pseudos.GetValueOrDefault(clientKey, clientKey)}");
-                        }
-                        else
-                        {
-                            Logger.Error("Invalid FILE message format.");
-                        }
-                    }
-                    else
-                    {
-                        Logger.Log($"Unknown message from {clientKey}: {message}");
+                        FileManager.StartReceiving(fileName, fileSize, stream);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error($"Error with client {clientKey}: {ex.Message}");
+                Logger.Error($"Error: {ex.Message}");
             }
             finally
             {
-                // Nettoyage
-                if (stream != null) stream.Close();
+                stream.Close();
                 client.Close();
+
                 clients.TryRemove(clientKey, out _);
+
                 lock (pseudos)
                 {
-                    if (pseudos.ContainsKey(clientKey))
-                        pseudos.Remove(clientKey);
-                }
-                Logger.Log($"Client {clientKey} removed from ConnectionManager.");
-            }
-        }
-
-        private void DisconnectClient(string clientKey)
-        {
-            if (clients.TryRemove(clientKey, out TcpClient client))
-            {
-                client.Close();
-
-                if (pseudos.ContainsKey(clientKey))
                     pseudos.Remove(clientKey);
+                }
 
-                Logger.Log($"Client {clientKey} disconnected");
+                Logger.Log($"{clientKey} disconnected");
             }
         }
 
-        public void SendMessage(string clientKey, byte[] data)
+        public void sendReceiveSignal(string serverIp, int port, string pseudo)
         {
             try
             {
-                if (clients.ContainsKey(clientKey))
+                using (TcpClient client = new TcpClient(serverIp, port))
+                using (NetworkStream stream = client.GetStream())
                 {
-                    TcpClient client = clients[clientKey];
-                    NetworkStream stream = client.GetStream();
+                    string message = "PSEUDO|" + pseudo;
+                    byte[] data = Encoding.UTF8.GetBytes(message);
 
                     stream.Write(data, 0, data.Length);
-                    stream.Flush();
-                }
-                else
-                {
-                    Logger.Error($"Client {clientKey} not found.");
                 }
             }
             catch (Exception ex)
             {
-                Logger.Error($"SendMessage error ({clientKey}): {ex.Message}");
+                Logger.Error($"sendReceiveSignal: {ex.Message}");
             }
-        }
-
-        public void Broadcast(byte[] data)
-        {
-            foreach (var clientKey in clients.Keys)
-            {
-                SendMessage(clientKey, data);
-            }
-        }
-
-        // 🔹 Utilitaires
-        public string[] GetConnectedClients()
-        {
-            return clients.Keys.ToArray();
         }
 
         public string GetPseudo(string clientKey)
